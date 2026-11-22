@@ -7,8 +7,14 @@ namespace SNSRModLoader
     {
         public static string Get(string name)
         {
-            try { return Registry.ReadEmbedded("online.xml").DocumentElement.GetAttribute(name); }
-            catch (InvalidOperationException) { return ""; }
+            string configured = "";
+            try { configured = Registry.ReadEmbedded("online.xml").DocumentElement.GetAttribute(name); }
+            catch (InvalidOperationException) { }
+            if (configured.Length > 0) return configured;
+            const string repository = "https://raw.githubusercontent.com/ItsFrostyYo/SNSRModLoader/main/";
+            if (name == "verifiedModsUrl") return repository + "verified-mods.xml";
+            if (name == "updateManifestUrl") return repository + "loader-update.xml";
+            return "";
         }
     }
 }
