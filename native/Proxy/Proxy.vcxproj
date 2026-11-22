@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations"><ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+  <PropertyGroup Label="Globals"><ProjectGuid>{88609E16-731F-46C9-8139-6B1A7A83240D}</ProjectGuid><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration"><ConfigurationType>DynamicLibrary</ConfigurationType><PlatformToolset>v143</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings"><Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" /></ImportGroup>
+  <PropertyGroup><TargetName>winhttp</TargetName><OutDir>$(ProjectDir)bin\</OutDir><IntDir>$(ProjectDir)obj\</IntDir></PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile><WarningLevel>Level3</WarningLevel><Optimization>MinSpace</Optimization><PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;NOGDI;UNICODE;_UNICODE</PreprocessorDefinitions><CompileAs>CompileAsC</CompileAs><RuntimeLibrary>MultiThreaded</RuntimeLibrary><BufferSecurityCheck>false</BufferSecurityCheck><ExceptionHandling>false</ExceptionHandling><FunctionLevelLinking>true</FunctionLevelLinking></ClCompile>
+    <Link><SubSystem>Windows</SubSystem><ModuleDefinitionFile>dll.def</ModuleDefinitionFile><EntryPointSymbol>DllEntry</EntryPointSymbol><IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries><EnableCOMDATFolding>true</EnableCOMDATFolding><OptimizeReferences>true</OptimizeReferences></Link>
+    <PreBuildEvent><Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(ProjectDir)..\scripts\genproxy.ps1" -projectPath "$(ProjectDir)." -templatePath "$(ProjectDir)..\scripts" -arch 64</Command></PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup><ClCompile Include="crt.c" /><ClCompile Include="main.c" /><ClCompile Include="proxy.c" /><MASM Include="dllproxy.asm" /></ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets"><Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" /></ImportGroup>
+</Project>

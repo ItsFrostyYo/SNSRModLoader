@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net35</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="HarmonyX" Version="2.9.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
+    <EmbeddedResource Include="../../registry/game-builds.xml" Link="game-builds.xml" />
+    <EmbeddedResource Include="../../artifacts/generated/online.xml" Link="online.xml" Condition="Exists('../../artifacts/generated/online.xml')" />
+  </ItemGroup>
+</Project>

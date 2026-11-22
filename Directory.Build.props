@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <Version>1.0.0</Version>
+    <DefineConstants Condition="'$(Diagnostics)' == 'true'">$(DefineConstants);SNSR_DIAGNOSTICS</DefineConstants>
+    <TestFriend Condition="'$(MSBuildProjectName)' == 'SNSRModLoader'">SNSRModLoader.Tests</TestFriend>
+    <TestFriend Condition="'$(MSBuildProjectName)' == 'SNSRModLoader.Runtime'">WatermarkLifecycleTests</TestFriend>
+    <BaseIntermediateOutputPath>obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
+    <GameRoot Condition="'$(GameRoot)' == ''">C:\Program Files (x86)\Steam\steamapps\common</GameRoot>
+    <LegacyManaged>$(GameRoot)\Subnautica2018\Subnautica_Data\Managed</LegacyManaged>
+    <ModernManaged>$(GameRoot)\Subnautica2021\Subnautica_Data\Managed</ModernManaged>
+  </PropertyGroup>
+  <Import Project="local.paths.props" Condition="Exists('local.paths.props')" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net35' Or '$(TargetFramework)' == 'net472'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Diagnostics)' == 'true' And '$(TestFriend)' != ''">
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo"><_Parameter1>$(TestFriend)</_Parameter1></AssemblyAttribute>
+  </ItemGroup>
+</Project>

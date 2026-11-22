@@ -1,0 +1,18 @@
+SNSRModLoader third-party components
+
+Native bootstrap derived from UnityDoorstop 3.4.0.0
+https://github.com/NeighTools/UnityDoorstop/tree/81919046fa3cff331916f26bb5aec0c5d6d25adb
+CC0-1.0. Complete license: native/LICENSE.UnityDoorstop.
+Modified to support only Windows x64 Subnautica Mono, fixed managed entry point,
+no root configuration, no IL2CPP, alternate runtime or log redirection.
+
+HarmonyX 2.9.0 (0Harmony.dll): MIT
+https://github.com/BepInEx/HarmonyX
+MonoMod.RuntimeDetour and MonoMod.Utils 22.1.29.1: MIT
+https://github.com/MonoMod/MonoMod
+Mono.Cecil 0.10.4 (including Pdb, Mdb and Rocks): MIT
+https://github.com/jbevain/cecil
+Package licenses are copied under Mods/Loader/Licenses by tools/build.ps1.
+
+Unity and Subnautica assemblies are local build references only and are never
+included in loader packages. This project is not affiliated with Unknown Worlds.

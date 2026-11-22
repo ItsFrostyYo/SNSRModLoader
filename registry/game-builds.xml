@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gameBuilds schemaVersion="1">
+  <build version="September2018" sha256="1667ec5ef4475659fad2487bfd67bff1f1560721304b1605629898870849abb7" />
+  <build version="December2021" sha256="064517bdc1230ff471c7c9fc76fcb0d3e61e2a4e7392d7bd3bf9469297bdd637" />
+  <build version="March2023" sha256="450caad45063ca5965b74e88a029de834dab323ad57fb23b83831d6b179dbeb9" />
+  <build version="October2025" sha256="3d4d4ee8153d9adefc8a63e516822755716d03dd17bf52b87ecdc39206d62bbd" />
+</gameBuilds>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net35</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../SNSRModLoader/SNSRModLoader.csproj" />
+    <Reference Include="UnityEngine"><HintPath>$(LegacyManaged)/UnityEngine.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(LegacyManaged)/UnityEngine.UI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(LegacyManaged)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

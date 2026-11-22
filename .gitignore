@@ -1,0 +1,21 @@
+.cache/
+**/bin/
+**/obj/
+artifacts/
+dist/
+native/Proxy/proxy.c
+native/Proxy/dllproxy.asm
+native/x64/
+.vs/
+*.user
+local.paths.props
+# Local requests, mod projects and mod artifacts do not belong to the loader repository.
+Prompt.md
+mods/
+SavePreloadBase/
+*.log
+*.pdb
+*.dll
+*.exe
+*.zip
+
