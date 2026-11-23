@@ -150,6 +150,7 @@ namespace SNSRModLoader.Runtime
         internal static LoaderHost Instance { get; private set; }
         private GameObject overlay;
         private readonly List<GameText> modLabels = new List<GameText>();
+        private readonly List<LoadedPlugin> displayPlugins = new List<LoadedPlugin>();
         private readonly List<NativeWatermarkBinding> watermarks = new List<NativeWatermarkBinding>();
         private NativeWatermarkBinding current;
         private object fontAsset;
@@ -200,6 +201,7 @@ namespace SNSRModLoader.Runtime
                 if (watermarks[i] != null && watermarks[i].Visible) { selected = watermarks[i]; break; }
             if (selected == null) { if (overlay != null && overlay.activeSelf) overlay.SetActive(false); return; }
             var template = selected.Font;
+            if (revision != LoaderRuntime.Revision || displayPlugins.Count != LoaderRuntime.Loaded.Count) RefreshDisplayOrder();
             if (overlay != null && !overlay.activeSelf) overlay.SetActive(true);
             if (selected == current && template.Font == fontAsset && overlay != null && modLabels.Count == LoaderRuntime.Loaded.Count)
             {
@@ -223,21 +225,28 @@ namespace SNSRModLoader.Runtime
                 scaler.referencePixelsPerUnit = nativeScaler.referencePixelsPerUnit;
             }
             AddLine("SNSRModLoader", Color.white, template, 0);
-            for (int i = 0; i < LoaderRuntime.Loaded.Count; i++)
-                modLabels.Add(AddLine(ModLine(i), LoaderRuntime.Loaded[i].Info.Verified ? Color.white : yellow, template, i + 1));
+            for (int i = 0; i < displayPlugins.Count; i++)
+                modLabels.Add(AddLine(ModLine(i), displayPlugins[i].Info.Verified ? Color.white : yellow, template, i + 1));
             LoaderRuntime.Diagnostic("Native-lifecycle watermark created with game font '" + template.Name + "', " + LoaderRuntime.Loaded.Count + " plugin name(s).");
 #if SNSR_DIAGNOSTICS
             if (!captured && Environment.GetEnvironmentVariable("SNSR_SMOKE_TEST") == "1") { captured = true; StartCoroutine(CaptureDiagnostic()); }
 #endif
         }
-        private static string ModLine(int index)
-        { return (index == 0 ? "Using " : "") + LoaderRuntime.Loaded[index].Info.Name + (index + 1 < LoaderRuntime.Loaded.Count ? "," : ""); }
+        private void RefreshDisplayOrder()
+        {
+            // Stable partition for display only; dependency/load/unload order stays intact.
+            displayPlugins.Clear();
+            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Verified) displayPlugins.Add(plugin);
+            foreach (var plugin in LoaderRuntime.Loaded) if (!plugin.Info.Verified) displayPlugins.Add(plugin);
+        }
+        private string ModLine(int index)
+        { return (index == 0 ? "Using " : "") + displayPlugins[index].Info.Name + (index + 1 < displayPlugins.Count ? "," : ""); }
         private void UpdateModLabels()
         {
             for (int i = 0; i < modLabels.Count; i++)
             {
                 modLabels[i].Set("text", ModLine(i));
-                modLabels[i].Set("color", LoaderRuntime.Loaded[i].Info.Verified ? Color.white : yellow);
+                modLabels[i].Set("color", displayPlugins[i].Info.Verified ? Color.white : yellow);
             }
         }
         private GameText AddLine(string value, Color color, GameFont template, int line)

@@ -5,11 +5,11 @@ A minimal Windows x64 mod loader for Subnautica **September 2018**, **December 2
 ## Installation
 
 1. Close Subnautica.
-2. Download `SNSRModLoader-1.0.0-win-x64.zip` from [Releases](https://github.com/ItsFrostyYo/SNSRModLoader/releases).
+2. Download the latest `SNSRModLoader-VERSION-win-x64.zip` from [Releases](https://github.com/ItsFrostyYo/SNSRModLoader/releases).
 3. Extract it into your game folder, next to `Subnautica.exe`.
 4. Put compatible SNSRModLoader mod DLLs directly inside `Mods`, then launch the game normally.
 
-The release download is available once version 1.0.0 has been published. Do not install this loader alongside BepInEx or QModManager. Their plugins need a version made specifically for SNSRModLoader.
+Do not install this loader alongside BepInEx or QModManager. Their plugins need a version made specifically for SNSRModLoader.
 
 The game folder needs only `winhttp.dll` and `Mods` for the loader:
 
@@ -35,7 +35,7 @@ SNSRModLoader
 Using Save Preload Base
 ```
 
-With multiple mods, commas separate the names; the last name has no comma. Verified names are white. Unverified names, or names awaiting verification, are light yellow. All warnings and update prompts are external Windows dialogs.
+After the online check succeeds, verified mods appear first, followed by unverified mods. With the current list, Save Preload Base is first after `Using` and white; other mods appear below it in light yellow. While verification is pending or unavailable, names remain light yellow. With multiple mods, commas separate the names; the last name has no comma. All warnings and update prompts are external Windows dialogs.
 
 ## Verified mods
 
