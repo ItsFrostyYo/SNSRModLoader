@@ -13,6 +13,9 @@ namespace SNSRModLoader
         public string PluginId { get; private set; }
         public string PluginName { get; private set; }
         public string PluginVersion { get; private set; }
+        public bool AutomaticUpdate { get; set; }
+        public string UpdateRepository { get; set; }
+        public string UpdateManifestUrl { get; set; }
         public SNSRModLoaderAttribute(string pluginId, string pluginName, string pluginVersion)
         { PluginId = pluginId; PluginName = pluginName; PluginVersion = pluginVersion; }
     }

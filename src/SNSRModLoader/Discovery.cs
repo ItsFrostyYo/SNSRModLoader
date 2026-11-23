@@ -20,6 +20,8 @@ namespace SNSRModLoader
         public string Id, Name, Version, Path, TypeName, Sha256;
         public GameVersion[] Targets;
         public bool Verified;
+        public bool AutomaticUpdate;
+        public string UpdateRepository, UpdateManifestUrl;
         public readonly List<Dependency> Dependencies = new List<Dependency>();
         public readonly List<PluginConflict> Conflicts = new List<PluginConflict>();
     }
@@ -28,6 +30,8 @@ namespace SNSRModLoader
     {
         private const string Prefix = "SNSRModLoader.";
         public static List<PluginInfo> Scan(string mods, GameVersion game, Action<string> warning)
+        { return Scan(mods, game, warning, null); }
+        public static List<PluginInfo> Scan(string mods, GameVersion game, Action<string> warning, Action<PluginInfo> updateCandidate)
         {
             var candidates = new List<PluginInfo>();
             var files = Directory.GetFiles(mods, "*.dll", SearchOption.TopDirectoryOnly)
@@ -51,6 +55,12 @@ namespace SNSRModLoader
                             Name = (string)attribute.ConstructorArguments[1].Value, Version = (string)attribute.ConstructorArguments[2].Value, Sha256 = Registry.Hash(path) };
                         if (!PluginContext.IsValidId(info.Id) || string.IsNullOrEmpty(info.Name) || info.Name.Length > 128 || info.Name.Any(char.IsControl)) throw new InvalidOperationException("Invalid plugin ID or display name.");
                         new Version(info.Version);
+                        foreach (var property in attribute.Properties)
+                        {
+                            if (property.Name == "AutomaticUpdate") info.AutomaticUpdate = (bool)property.Argument.Value;
+                            if (property.Name == "UpdateRepository") info.UpdateRepository = (string)property.Argument.Value;
+                            if (property.Name == "UpdateManifestUrl") info.UpdateManifestUrl = (string)property.Argument.Value;
+                        }
                         var targets = new List<GameVersion>();
                         foreach (var a in type.CustomAttributes)
                         {
@@ -72,6 +82,7 @@ namespace SNSRModLoader
                         }
                         info.Targets = targets.Distinct().ToArray();
                         if (targets.Count == 0 || targets.Any(v => v == GameVersion.Unknown || !Enum.IsDefined(typeof(GameVersion), v))) throw new InvalidOperationException("Declare TargetVersion or TargetVersions using supported game versions.");
+                        if (updateCandidate != null) updateCandidate(info);
                         if (!targets.Contains(game)) { warning(Path.GetFileName(path) + " (" + info.Name + ") does not target " + Registry.DisplayName(game) + "; skipped."); continue; }
                         if (game == GameVersion.September2018 && assembly.MainModule.RuntimeVersion.StartsWith("v4")) throw new InvalidOperationException("2018 plugins must target .NET 3.5, not the newer CLR.");
                         candidates.Add(info);

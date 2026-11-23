@@ -39,9 +39,9 @@ After the online check succeeds, verified mods appear first, followed by unverif
 
 ## Verified mods
 
-| Verified mod | Version | Supported games |
+| Verified mod | Version | Supported Versions |
 | --- | --- | --- |
-| Save Preload Base | 1.1.0 | September 2018, December 2021, March 2023, October 2025 |
+| Subnautica Optimization Mod | 1.0.0 | September 2018 |
 
 The authoritative [verified-mod list](verified-mods.xml) checks the plugin's exact ID, version, DLL SHA-256 and supported game version. Renaming a DLL does not change its verification, but modifying or rebuilding it does.
 
@@ -53,7 +53,11 @@ The loader checks for an update in the background after the game launches. If on
 
 After accepting, let the download finish, close the game normally, and wait for the successful-update message before launching again. The updater replaces the loader and its dependencies together, while preserving your mods, settings and existing configuration. It does not close or restart the game for you.
 
-If the connection fails, the game continues and the check is retried next launch. To disable update checks, set `checkForUpdates=false` in `Mods/Loader/Config/loader.ini`.
+Mods whose authors enable automatic updates are checked together with the loader. One prompt lists all available compatible updates; accepted updates install together after you close the game once. Mod settings are preserved. Updated mod DLLs are checked against the verified list again on the next launch; an automatic update does not automatically grant verification.
+
+If one mod's update source is unavailable, other sources can still be checked. No installed files change until the complete selected batch has downloaded and validated. A write failure attempts to restore the previous files for the whole batch.
+
+If the connection fails, the game continues and the check is retried next launch. In `Mods/Loader/Config/loader.ini`, set `checkForUpdates=false` to disable loader checks and `checkForModUpdates=false` to disable mod checks. Mods without the author's opt-in are never fetched or updated.
 
 ## Troubleshooting and removal
 

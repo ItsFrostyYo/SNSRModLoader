@@ -50,7 +50,8 @@ namespace SNSRModLoader.Runtime
                 host.AddComponent<SceneCleanerPreserve>();
                 var behaviour = host.AddComponent<LoaderHost>();
                 behaviour.InstallWatermarkHooks();
-                var infos = Discovery.Scan(mods, Game, Warn);
+                var updateCandidates = new List<PluginInfo>();
+                var infos = Discovery.Scan(mods, Game, Warn, updateCandidates.Add);
                 var directories = infos.Select(p => Path.Combine(Path.Combine(mods, "Settings"), p.Id)).ToArray();
                 AppDomain.CurrentDomain.AssemblyResolve += delegate(object sender, ResolveEventArgs args)
                 {
@@ -95,7 +96,7 @@ namespace SNSRModLoader.Runtime
                 var settings = new SettingsFile(Path.Combine(Path.Combine(loader, "Config"), "loader.ini"));
                 var verificationUrl = settings.Get("verifiedModsUrl", "");
                 behaviour.BeginVerification(verificationUrl.Length > 0 ? verificationUrl : OnlineSources.Get("verifiedModsUrl"), mods);
-                LoaderUpdates.Begin(loader, settings);
+                LoaderUpdates.Begin(loader, settings, Game, updateCandidates);
             }
             catch (Exception ex) { Warn("Loader startup failed: " + ex); ShowWarnings(); }
         }

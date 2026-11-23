@@ -1,8 +1,5 @@
 <verifiedMods schemaVersion="1">
-  <mod id="ItsFrosti.SavePreloadBase" version="1.1.0" sha256="372fd3c6edb37859231f857a324fd66f5020408ab89399e280e9c6dd455a0124">
+  <mod id="ItsFrosti.OptimizationMod" version="1.0.0" sha256="fa3caf9352eb9d4626ff8afd198f0c6964b9ad610e24109d1b77f09a2e0d3e38">
     <target version="September2018" />
-    <target version="December2021" />
-    <target version="March2023" />
-    <target version="October2025" />
   </mod>
 </verifiedMods>

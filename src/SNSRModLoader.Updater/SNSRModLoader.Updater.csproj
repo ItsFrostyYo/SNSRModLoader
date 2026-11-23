@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net472</TargetFramework><OutputType>WinExe</OutputType></PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
+    <Compile Include="../SNSRModLoader/UpdateSource.cs" Link="UpdateSource.cs" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>

@@ -64,6 +64,15 @@ namespace SNSRModLoader.Updater
         internal static string SafePath(string root, string path)
         {
             if (!OwnedPath(path)) throw new InvalidDataException("Invalid loader path: " + path);
+            return ResolvePath(root, path);
+        }
+        internal static string ModPath(string root, string filename)
+        {
+            if (string.IsNullOrEmpty(filename) || !Regex.IsMatch(filename, @"^[A-Za-z0-9_.-]+\.dll$")) throw new InvalidDataException("Invalid mod DLL filename.");
+            return ResolvePath(root, "Mods/" + filename);
+        }
+        private static string ResolvePath(string root, string path)
+        {
             root = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
             var full = Path.GetFullPath(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)));
             if (!full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Path escaped loader root.");
@@ -100,6 +109,12 @@ namespace SNSRModLoader.Updater
         }
         internal void Install(string stage, string game, Action<int> afterWrite = null)
         {
+            var transaction = new FileTransaction();
+            PrepareInstall(stage, game, transaction);
+            transaction.Apply(afterWrite);
+        }
+        internal void PrepareInstall(string stage, string game, FileTransaction transaction)
+        {
             // Preflight everything before changing any installed file.
             foreach (var file in Files)
             {
@@ -110,41 +125,20 @@ namespace SNSRModLoader.Updater
             var inventoryPath = SafePath(game, Inventory);
             if (File.Exists(inventoryPath)) previous = File.ReadAllLines(inventoryPath);
             if (previous.Length > 128 || previous.Any(p => !OwnedPath(p))) throw new InvalidDataException("Invalid installed loader inventory.");
-            var changed = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
             var paths = previous.Concat(Files.Keys).Distinct(StringComparer.OrdinalIgnoreCase).Where(p => !p.StartsWith("Mods/Loader/Config/", StringComparison.Ordinal) || !File.Exists(SafePath(game, p)));
             foreach (var path in paths)
             {
                 var target = SafePath(game, path);
-                changed.Add(target, File.Exists(target) ? File.ReadAllBytes(target) : null);
+                if (path == "Mods/Loader/installed-proxy.sha256") continue;
+                if (Files.ContainsKey(path)) transaction.Copy(SafePath(stage, path), target);
+                else transaction.Delete(target);
             }
             var marker = Path.Combine(game, "Mods", "Loader", "installed-proxy.sha256");
             SafePath(game, "Mods/Loader/SNSRModLoader.dll");
             if (File.Exists(marker) && (File.GetAttributes(marker) & FileAttributes.ReparsePoint) != 0) throw new IOException("Linked ownership marker.");
             if (!File.Exists(marker) || !File.Exists(Path.Combine(game, "winhttp.dll")) || !string.Equals(File.ReadAllText(marker).Trim(), Hash(Path.Combine(game, "winhttp.dll")), StringComparison.OrdinalIgnoreCase))
                 throw new IOException("winhttp.dll ownership changed; reinstall the loader manually.");
-            if (!changed.ContainsKey(marker)) changed.Add(marker, File.ReadAllBytes(marker));
-            try
-            {
-                int count = 0;
-                foreach (var target in changed.Keys)
-                {
-                    if (target == marker) continue;
-                    var relative = target.Substring(Path.GetFullPath(game).TrimEnd('\\').Length + 1).Replace('\\', '/');
-                    if (Files.ContainsKey(relative)) { Directory.CreateDirectory(Path.GetDirectoryName(target)); File.Copy(SafePath(stage, relative), target, true); }
-                    else if (File.Exists(target)) File.Delete(target);
-                    if (afterWrite != null) afterWrite(++count);
-                }
-                File.WriteAllText(marker, Hash(Path.Combine(game, "winhttp.dll")));
-            }
-            catch (Exception original)
-            {
-                var errors = new List<Exception> { original };
-                foreach (var old in changed)
-                    try { if (old.Value == null) { if (File.Exists(old.Key)) File.Delete(old.Key); } else File.WriteAllBytes(old.Key, old.Value); }
-                    catch (Exception rollback) { errors.Add(rollback); }
-                if (errors.Count > 1) throw new AggregateException("Update failed and rollback needs manual recovery. Staged files were kept.", errors);
-                throw new IOException("Update failed; previous loader files were restored.", original);
-            }
+            transaction.Bytes(marker, System.Text.Encoding.UTF8.GetBytes(Hash(SafePath(stage, "winhttp.dll"))));
         }
     }
 }
