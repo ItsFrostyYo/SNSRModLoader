@@ -1,8 +1,8 @@
-<loaderUpdate schemaVersion="1" version="1.0.2" url="https://github.com/ItsFrostyYo/SNSRModLoader/releases/download/v1.0.2/SNSRModLoader-1.0.2-win-x64.zip" sha256="7c22e716ecec188f1b957847ccd2f34120b8249065252dfa5c8849ccc1f9632c">
+<loaderUpdate schemaVersion="1" version="1.0.3" url="https://github.com/ItsFrostyYo/SNSRModLoader/releases/download/v1.0.3/SNSRModLoader-1.0.3-win-x64.zip" sha256="007c8bbb6af067cd145f99c7fd774ac4e083e83deb60c15b6f94635ef88d271d">
   <file path="Mods/Loader/0Harmony.dll" sha256="1a21cc03424fc82c3dd1346905d16494536b9595ae4162228d99fb7c285c1031" />
   <file path="Mods/Loader/Config/loader.ini" sha256="1440c22bc7bf58b03deee4a38a8af51dac75df5abbef4436711e9cbcef27fbbc" />
   <file path="Mods/Loader/installed-files.txt" sha256="5d7a91c1a76457d587452a8deb770b35b6cd83826ba52e2fc0ce4d266e0ab0ef" />
-  <file path="Mods/Loader/installed-proxy.sha256" sha256="e9599834bd825575170bba322c0095e5d17e4521ceab5ca6d263c143e3bfe242" />
+  <file path="Mods/Loader/installed-proxy.sha256" sha256="f764cccd1080a946b3852e89f5247776f829002d95889fe456131b873805b8d9" />
   <file path="Mods/Loader/Licenses/harmonyx.txt" sha256="1aaf59a35b7d0bc58cdc4ffe303558974ad5acae6700ba9e04a182e9f6cb5c8b" />
   <file path="Mods/Loader/Licenses/Mono.Cecil.txt" sha256="13d58ecbed676511c0c4c4009bff107025e50007ff5e7901dc562700ec62509e" />
   <file path="Mods/Loader/Licenses/MonoMod.txt" sha256="0b64833222e3c6a426ad29362d26334619fe02eaf2b89ea9c37805521896c920" />
@@ -14,9 +14,9 @@
   <file path="Mods/Loader/Mono.Cecil.Rocks.dll" sha256="54ac539fb5ddc8b44c0e9acd0fcb7324f89d1a072edf8ebc1b06dd691e3d3927" />
   <file path="Mods/Loader/MonoMod.RuntimeDetour.dll" sha256="40e49bb314391cd7bddc2644f8553eeba92c194b940836b103df16955c464e0c" />
   <file path="Mods/Loader/MonoMod.Utils.dll" sha256="9d1495f147ac93c4f81f84538c1a326e8f8a6aefc78d6289d798f3ce1162c5e9" />
-  <file path="Mods/Loader/SNSRModLoader.Bootstrap.dll" sha256="de17a9df1ba1583ea0b85bc31f980d864dcf51618e7356640fa17f875a60c1c6" />
-  <file path="Mods/Loader/SNSRModLoader.dll" sha256="818a0240eaf01d6020017c7d3f9ab58e79c16262e114b9b2ca80d857e6453ff9" />
-  <file path="Mods/Loader/SNSRModLoader.Runtime.dll" sha256="b15afa22adb6d6213c2e45774c7e02c06356e299b8643e224d965177ea5ad1c6" />
-  <file path="Mods/Loader/SNSRModLoader.Updater.exe" sha256="c7f32836b59b954a1a32b29c7f8ccd231eff0d4216662b144fac806dc92824b5" />
-  <file path="winhttp.dll" sha256="93a3674ad06ce5a6689dca3715c9db2379f36c1d11f1967af9a428af086c7f9f" />
+  <file path="Mods/Loader/SNSRModLoader.Bootstrap.dll" sha256="c47c36301a1705e5976353d665147dc25bc908bfe4c8e0a48b711a2fe1388091" />
+  <file path="Mods/Loader/SNSRModLoader.dll" sha256="547f717e002b02d015221bd109b1a263ecd830cd75c65a32b1591d8e7998d666" />
+  <file path="Mods/Loader/SNSRModLoader.Runtime.dll" sha256="7bf317ab44ccd33b5be265299d62827a7a5243d85a006e744db4e37596e5125b" />
+  <file path="Mods/Loader/SNSRModLoader.Updater.exe" sha256="30e8bd18eeb86d7193f8b2812b6559c34c2dd74270213abb8ec22913a4b9a243" />
+  <file path="winhttp.dll" sha256="dd910db56462878f62b10a897b856e5590d8334f11b57251246fd955678d5b0a" />
 </loaderUpdate>

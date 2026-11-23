@@ -80,7 +80,9 @@ namespace SNSRModLoader
                 Require(WinHttpSetTimeouts(session, 2500, 2500, 2500, 2500));
                 uint protocols = 0x800; Require(WinHttpSetOption(session, 84, ref protocols, 4));
                 connection = WinHttpConnect(session, uri.Host, 443, 0); Require(connection != IntPtr.Zero);
-                request = WinHttpOpenRequest(connection, "GET", uri.PathAndQuery, null, null, IntPtr.Zero, 0x00800000); Require(request != IntPtr.Zero);
+                // GitHub's raw CDN can otherwise serve a previous approval list for minutes.
+                var freshPath = uri.PathAndQuery + (uri.Query.Length == 0 ? "?" : "&") + "snsrCheck=" + DateTime.UtcNow.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                request = WinHttpOpenRequest(connection, "GET", freshPath, null, null, IntPtr.Zero, 0x00800000); Require(request != IntPtr.Zero);
                 uint redirects = 0; Require(WinHttpSetOption(request, 88, ref redirects, 4));
                 Require(WinHttpSendRequest(request, null, 0, IntPtr.Zero, 0, 0, UIntPtr.Zero));
                 Require(WinHttpReceiveResponse(request, IntPtr.Zero));

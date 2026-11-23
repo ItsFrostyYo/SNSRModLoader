@@ -46,6 +46,10 @@ namespace SNSRModLoader
                 {
                     using (var assembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters { AssemblyResolver = resolver }))
                     {
+                        var api = assembly.MainModule.AssemblyReferences.FirstOrDefault(r => r.Name == "SNSRModLoader");
+                        var installedApi = typeof(Plugin).Assembly.GetName().Version;
+                        if (api != null && api.Version > installedApi)
+                            throw new InvalidOperationException("This plugin requires SNSRModLoader " + api.Version + "; installed loader is " + installedApi + ". Update the loader before using this plugin.");
                         var types = assembly.MainModule.Types.Where(t => t.CustomAttributes.Any(a => a.AttributeType.FullName == Prefix + "SNSRModLoaderAttribute")).ToArray();
                         if (types.Length != 1) throw new InvalidOperationException("Expected exactly one SNSRModLoader plugin declaration; found " + types.Length + ". This DLL is not a valid plugin for SNSRModLoader.");
                         var type = types[0];
