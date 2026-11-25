@@ -53,12 +53,14 @@ The loader identifies the game using `Assembly-CSharp.dll`, reads each mod's met
 A small watermark follows the game's own version watermark during startup and loading:
 
 ```text
-SNSRModLoader
+SNSRModLoader (Mods Verified)
 Using Optimizations Mod,
 Another Mod
 ```
 
 Loaded mods appear verified first, then known, then unknown. The final name has no trailing comma. Blocked conflicts appear separately under **Conflicts (not loaded)**.
+
+The title stays white. On the same line, its parenthesized status is green **(Mods Verified)** when every loaded mod is verified, or yellow **(Mods Verified for UCE)** when the whole set is approved for UCE and includes a UCE-only mod. Otherwise it is red **(Mods Not Verified)**, including mixed sets containing unapproved mods, conflicts, startup errors, pending/unavailable verification or disabled checks. It refreshes when the background verification finishes. With no mods installed, a successful verified-list check shows green.
 
 | Classification | Color | Submission status |
 | --- | --- | --- |

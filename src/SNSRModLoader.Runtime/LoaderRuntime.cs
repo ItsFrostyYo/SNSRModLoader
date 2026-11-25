@@ -168,6 +168,7 @@ namespace SNSRModLoader.Runtime
     {
         internal static LoaderHost Instance { get; private set; }
         private GameObject overlay;
+        private GameText titleLabel;
         private readonly List<GameText> modLabels = new List<GameText>();
         private readonly List<PluginInfo> displayPlugins = new List<PluginInfo>();
         private readonly List<NativeWatermarkBinding> watermarks = new List<NativeWatermarkBinding>();
@@ -252,7 +253,8 @@ namespace SNSRModLoader.Runtime
                 scaler.screenMatchMode = nativeScaler.screenMatchMode; scaler.matchWidthOrHeight = nativeScaler.matchWidthOrHeight;
                 scaler.referencePixelsPerUnit = nativeScaler.referencePixelsPerUnit;
             }
-            AddLine("SNSRModLoader", Color.white, template, 0);
+            titleLabel = AddLine(Title(), Color.white, template, 0);
+            titleLabel.Set(template.Tmp ? "richText" : "supportRichText", true);
             for (int i = 0; i < displayPlugins.Count; i++)
                 modLabels.Add(AddLine(ModLine(i), ModColor(displayPlugins[i]), template, i + 1));
             LoaderRuntime.Diagnostic("Native-lifecycle watermark created with game font '" + template.Name + "', " + LoaderRuntime.Loaded.Count + " loaded plugin(s), " + LoaderRuntime.Conflicted.Count + " conflicted plugin(s).");
@@ -289,12 +291,15 @@ namespace SNSRModLoader.Runtime
         }
         private void UpdateModLabels()
         {
+            titleLabel.Set("text", Title());
             for (int i = 0; i < modLabels.Count; i++)
             {
                 modLabels[i].Set("text", ModLine(i));
                 modLabels[i].Set("color", ModColor(displayPlugins[i]));
             }
         }
+        private static string Title()
+        { return WatermarkTitle.Format(LoaderRuntime.VerificationChecksEnabled, LoaderRuntime.Eligible, LoaderRuntime.UCEEligible); }
         private GameText AddLine(string value, Color color, GameFont template, int line)
         {
             var text = template.Create(overlay, "Line", 20, color, value);
