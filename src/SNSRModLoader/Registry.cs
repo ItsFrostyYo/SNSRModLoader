@@ -38,15 +38,24 @@ namespace SNSRModLoader
             return GameVersion.Unknown;
         }
         public static bool IsVerified(XmlDocument registry, string id, string version, string sha256, GameVersion game)
+        { return FindMod(registry, "verifiedMods", id, version, sha256, game) != null; }
+        public static bool IsKnown(XmlDocument registry, string id, string version, string sha256, GameVersion game, out bool uce)
         {
-            foreach (XmlElement mod in registry.SelectNodes("/verifiedMods/mod"))
+            var mod = FindMod(registry, "knownMods", id, version, sha256, game);
+            uce = mod != null && string.Equals(mod.GetAttribute("UCE").Trim(), "true", StringComparison.OrdinalIgnoreCase);
+            return mod != null;
+        }
+        private static XmlElement FindMod(XmlDocument registry, string root, string id, string version, string sha256, GameVersion game)
+        {
+            if (registry == null) return null;
+            foreach (XmlElement mod in registry.SelectNodes("/" + root + "/mod"))
             {
                 if (mod.GetAttribute("id") != id || mod.GetAttribute("version") != version ||
                     !string.Equals(mod.GetAttribute("sha256"), sha256, StringComparison.OrdinalIgnoreCase)) continue;
                 foreach (XmlElement target in mod.SelectNodes("target"))
-                    if (target.GetAttribute("version") == game.ToString()) return true;
+                    if (target.GetAttribute("version") == game.ToString()) return mod;
             }
-            return false;
+            return null;
         }
         public static string DisplayName(GameVersion game)
         {

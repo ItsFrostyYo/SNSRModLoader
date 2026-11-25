@@ -25,11 +25,18 @@ namespace SNSRModLoader.Runtime
         private static readonly object logGate = new object();
         public static readonly List<LoadedPlugin> Loaded = new List<LoadedPlugin>();
         public static readonly List<string> Warnings = new List<string>();
+        public static readonly List<PluginInfo> Conflicted = new List<PluginInfo>();
         public static GameVersion Game { get; private set; }
         public static VerificationState VerificationStatus { get; private set; }
+        public static VerificationState KnownVerificationStatus { get; private set; }
+        public static bool VerificationChecksEnabled { get; private set; }
+        private static int startupWarnings;
         internal static int Revision;
         private static int reportedWarnings;
         public static bool Eligible { get { return VerificationStatus == VerificationState.Available && Warnings.Count == 0 && Loaded.All(p => p.Info.Verified); } }
+        public static bool UCEEligible { get { return VerificationChecksEnabled && startupWarnings == 0 && Conflicted.Count == 0 &&
+            (VerificationStatus == VerificationState.Available || KnownVerificationStatus == VerificationState.Available) &&
+            Loaded.All(p => p.Info.Status == PluginStatus.Verified || (p.Info.Status == PluginStatus.Known && p.Info.UCEAllowed)); } }
         public static void Start()
         {
             if (started) return;
@@ -52,6 +59,8 @@ namespace SNSRModLoader.Runtime
                 behaviour.InstallWatermarkHooks();
                 var updateCandidates = new List<PluginInfo>();
                 var infos = Discovery.Scan(mods, Game, Warn, updateCandidates.Add);
+                Conflicted.AddRange(updateCandidates.Where(p => p.Status == PluginStatus.Conflicted));
+                if (Conflicted.Count > 0) Revision++;
                 var directories = infos.Select(p => Path.Combine(Path.Combine(mods, "Settings"), p.Id)).ToArray();
                 AppDomain.CurrentDomain.AssemblyResolve += delegate(object sender, ResolveEventArgs args)
                 {
@@ -94,8 +103,12 @@ namespace SNSRModLoader.Runtime
                 Write("Startup complete. Loaded " + Loaded.Count + " plugin(s). Registry eligibility: " + Eligible);
                 ShowWarnings();
                 var settings = new SettingsFile(Path.Combine(Path.Combine(loader, "Config"), "loader.ini"));
+                startupWarnings = Warnings.Count;
+                VerificationChecksEnabled = settings.Get("checkVerifiedMods", true);
                 var verificationUrl = settings.Get("verifiedModsUrl", "");
-                behaviour.BeginVerification(verificationUrl.Length > 0 ? verificationUrl : OnlineSources.Get("verifiedModsUrl"), mods);
+                var knownUrl = settings.Get("knownModsUrl", "");
+                behaviour.BeginVerification(verificationUrl.Length > 0 ? verificationUrl : OnlineSources.Get("verifiedModsUrl"),
+                    knownUrl.Length > 0 ? knownUrl : OnlineSources.Get("knownModsUrl"), mods, VerificationChecksEnabled);
                 LoaderUpdates.Begin(loader, settings, Game, updateCandidates);
             }
             catch (Exception ex) { Warn("Loader startup failed: " + ex); ShowWarnings(); }
@@ -117,21 +130,26 @@ namespace SNSRModLoader.Runtime
 #endif
             ExternalDialogs.Show(pending);
         }
-        internal static void ApplyVerification(VerificationResult result, string mods)
+        internal static void ApplyVerification(ModCatalogResult result)
         {
-            VerificationStatus = result.State;
+            VerificationStatus = result.Verified.State;
+            KnownVerificationStatus = result.Known.State;
             Revision++;
-            if (result.State != VerificationState.Available) { Warn(result.Message); ShowWarnings(); return; }
-            Write(result.Message);
+            if (VerificationStatus == VerificationState.Disabled) Write(result.Verified.Message);
+            else {
+                if (VerificationStatus == VerificationState.Unavailable) Warn(result.Verified.Message); else Write(result.Verified.Message);
+                if (KnownVerificationStatus == VerificationState.Unavailable) Warn(result.Known.Message);
+                else if (!string.IsNullOrEmpty(result.Known.Message)) Write(result.Known.Message);
+            }
             foreach (var plugin in Loaded)
             {
                 var info = plugin.Info;
-                info.Verified = Registry.IsVerified(result.Registry, info.Id, info.Version, info.Sha256, Game);
-                var data = Path.Combine(Path.Combine(mods, "Settings"), info.Id);
-                if (Directory.Exists(data) && Directory.GetFiles(data, "*.dll", SearchOption.AllDirectories).Length > 0) info.Verified = false;
-                if (!info.Verified) Warn("The Plugin " + info.Name + " (" + Path.GetFileName(info.Path) + ") is not a Verified Mod/Plugin, and is not Eligible for Leaderboard Submissions");
+                ModApproval.Classify(info, result, Game);
+                var warning = ModApproval.Warning(info);
+                if (VerificationChecksEnabled && warning != null) Warn(warning);
             }
             Write("Registry eligibility: " + Eligible);
+            Write("Unofficial Category Extensions eligibility: " + UCEEligible);
             ShowWarnings();
         }
         internal static void Shutdown()
@@ -141,7 +159,7 @@ namespace SNSRModLoader.Runtime
                 try { Loaded[i].Instance.Unload(); } catch (Exception ex) { Write(ex.ToString()); }
                 try { Loaded[i].Context.Harmony.UnpatchSelf(); } catch (Exception ex) { Write(ex.ToString()); }
             }
-            Loaded.Clear(); PluginLogger.Sink = null;
+            Loaded.Clear(); Conflicted.Clear(); PluginLogger.Sink = null;
             if (log != null) { log.Dispose(); log = null; }
         }
     }
@@ -151,14 +169,15 @@ namespace SNSRModLoader.Runtime
         internal static LoaderHost Instance { get; private set; }
         private GameObject overlay;
         private readonly List<GameText> modLabels = new List<GameText>();
-        private readonly List<LoadedPlugin> displayPlugins = new List<LoadedPlugin>();
+        private readonly List<PluginInfo> displayPlugins = new List<PluginInfo>();
         private readonly List<NativeWatermarkBinding> watermarks = new List<NativeWatermarkBinding>();
         private NativeWatermarkBinding current;
         private object fontAsset;
         private Harmony watermarkHarmony;
         private int revision = -1;
         private volatile bool verificationFinished;
-        private VerificationResult verificationResult;
+        private ModCatalogResult verificationResult;
+        private int DisplayCount { get { return LoaderRuntime.Loaded.Count + LoaderRuntime.Conflicted.Count; } }
         internal bool IsWatermarkVisible { get { return overlay != null && overlay.activeInHierarchy; } }
         internal NativeWatermarkBinding[] Bindings { get { return watermarks.ToArray(); } }
         private void Awake() { Instance = this; }
@@ -180,10 +199,19 @@ namespace SNSRModLoader.Runtime
         internal void Forget(NativeWatermarkBinding binding)
         { watermarks.Remove(binding); RefreshWatermark(); }
         public void BeginVerification(string url, string mods)
+        { BeginVerification(url, OnlineSources.Get("knownModsUrl"), mods, LoaderRuntime.VerificationChecksEnabled); }
+        public void BeginVerification(string url, string knownUrl, string mods, bool enabled)
         {
+            var plugins = LoaderRuntime.Loaded.Select(p => p.Info).ToArray();
+            if (enabled) foreach (var info in plugins) {
+                var data = Path.Combine(Path.Combine(mods, "Settings"), info.Id);
+                info.HasAdditionalAssemblies = Directory.Exists(data) && Directory.GetFiles(data, "*.dll", SearchOption.AllDirectories).Length > 0;
+            }
+            if (!enabled) { LoaderRuntime.ApplyVerification(ModApproval.Fetch(false, url, knownUrl, plugins, LoaderRuntime.Game)); return; }
+            verificationFinished = false;
             ThreadPool.QueueUserWorkItem(delegate
             {
-                verificationResult = Verification.Fetch(url);
+                verificationResult = ModApproval.Fetch(true, url, knownUrl, plugins, LoaderRuntime.Game);
                 verificationFinished = true;
             });
             StartCoroutine(CompleteVerification(mods));
@@ -191,9 +219,8 @@ namespace SNSRModLoader.Runtime
         private IEnumerator CompleteVerification(string mods)
         {
             while (!verificationFinished) yield return null;
-            LoaderRuntime.ApplyVerification(verificationResult, mods);
+            LoaderRuntime.ApplyVerification(verificationResult);
         }
-        private readonly Color yellow = new Color(1f, 0.96f, 0.65f, 1f);
         private void LateUpdate() { RefreshWatermark(); }
         internal void RefreshWatermark()
         {
@@ -202,9 +229,9 @@ namespace SNSRModLoader.Runtime
                 if (watermarks[i] != null && watermarks[i].Visible) { selected = watermarks[i]; break; }
             if (selected == null) { if (overlay != null && overlay.activeSelf) overlay.SetActive(false); return; }
             var template = selected.Font;
-            if (revision != LoaderRuntime.Revision || displayPlugins.Count != LoaderRuntime.Loaded.Count) RefreshDisplayOrder();
+            if (revision != LoaderRuntime.Revision || displayPlugins.Count != DisplayCount) RefreshDisplayOrder();
             if (overlay != null && !overlay.activeSelf) overlay.SetActive(true);
-            if (selected == current && template.Font == fontAsset && overlay != null && modLabels.Count == LoaderRuntime.Loaded.Count)
+            if (selected == current && template.Font == fontAsset && overlay != null && modLabels.Count == DisplayCount)
             {
                 if (revision != LoaderRuntime.Revision) { UpdateModLabels(); revision = LoaderRuntime.Revision; }
                 return;
@@ -227,8 +254,8 @@ namespace SNSRModLoader.Runtime
             }
             AddLine("SNSRModLoader", Color.white, template, 0);
             for (int i = 0; i < displayPlugins.Count; i++)
-                modLabels.Add(AddLine(ModLine(i), displayPlugins[i].Info.Verified ? Color.white : yellow, template, i + 1));
-            LoaderRuntime.Diagnostic("Native-lifecycle watermark created with game font '" + template.Name + "', " + LoaderRuntime.Loaded.Count + " plugin name(s).");
+                modLabels.Add(AddLine(ModLine(i), ModColor(displayPlugins[i]), template, i + 1));
+            LoaderRuntime.Diagnostic("Native-lifecycle watermark created with game font '" + template.Name + "', " + LoaderRuntime.Loaded.Count + " loaded plugin(s), " + LoaderRuntime.Conflicted.Count + " conflicted plugin(s).");
 #if SNSR_DIAGNOSTICS
             if (!captured && Environment.GetEnvironmentVariable("SNSR_SMOKE_TEST") == "1") { captured = true; StartCoroutine(CaptureDiagnostic()); }
 #endif
@@ -237,17 +264,34 @@ namespace SNSRModLoader.Runtime
         {
             // Stable partition for display only; dependency/load/unload order stays intact.
             displayPlugins.Clear();
-            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Verified) displayPlugins.Add(plugin);
-            foreach (var plugin in LoaderRuntime.Loaded) if (!plugin.Info.Verified) displayPlugins.Add(plugin);
+            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Verified) displayPlugins.Add(plugin.Info);
+            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Known) displayPlugins.Add(plugin.Info);
+            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Unknown) displayPlugins.Add(plugin.Info);
+            displayPlugins.AddRange(LoaderRuntime.Conflicted);
         }
         private string ModLine(int index)
-        { return (index == 0 ? "Using " : "") + displayPlugins[index].Info.Name + (index + 1 < displayPlugins.Count ? "," : ""); }
+        {
+            bool conflict = displayPlugins[index].Status == PluginStatus.Conflicted;
+            bool firstConflict = conflict && (index == 0 || displayPlugins[index - 1].Status != PluginStatus.Conflicted);
+            string prefix = firstConflict ? "Conflicts (not loaded): " : index == 0 ? "Using " : "";
+            bool comma = index + 1 < displayPlugins.Count && (conflict || displayPlugins[index + 1].Status != PluginStatus.Conflicted);
+            return prefix + displayPlugins[index].Name + (comma ? "," : "");
+        }
+        private static Color ModColor(PluginInfo info)
+        {
+            switch (info.Status) {
+                case PluginStatus.Verified: return Color.white;
+                case PluginStatus.Known: return Color.yellow;
+                case PluginStatus.Conflicted: return new Color(1f, 0.5f, 0f, 1f);
+                default: return Color.red;
+            }
+        }
         private void UpdateModLabels()
         {
             for (int i = 0; i < modLabels.Count; i++)
             {
                 modLabels[i].Set("text", ModLine(i));
-                modLabels[i].Set("color", displayPlugins[i].Info.Verified ? Color.white : yellow);
+                modLabels[i].Set("color", ModColor(displayPlugins[i]));
             }
         }
         private GameText AddLine(string value, Color color, GameFont template, int line)

@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace SNSRModLoader
 {
-    public enum VerificationState { Pending, Available, Unavailable }
+    public enum VerificationState { Pending, Available, Unavailable, Disabled, NotRequired }
     public sealed class VerificationResult
     {
         public VerificationState State;
@@ -20,25 +20,30 @@ namespace SNSRModLoader
     {
         public static VerificationResult Fetch(string url)
         { return FetchCore(url, Download); }
+        public static VerificationResult FetchKnown(string url)
+        { return FetchCore(url, Download, true); }
         internal static VerificationResult FetchCore(string url, Func<Uri, byte[]> download)
+        { return FetchCore(url, download, false); }
+        private static VerificationResult FetchCore(string url, Func<Uri, byte[]> download, bool known)
         {
+            string label = known ? "known mods" : "verified mods";
             if (string.IsNullOrEmpty(url)) return new VerificationResult { State = VerificationState.Unavailable,
-                Message = "Verified-mod check unavailable: the loader's GitHub repository has not been published/configured yet. Mod verification is unknown; this session is not eligible for leaderboard submissions." };
+                Message = "Cannot check " + label + ": the GitHub endpoint is not configured. Classification is unknown." };
             try
             {
                 var uri = ValidateUrl(url);
                 using (var stream = new MemoryStream(download(uri)))
-                    return new VerificationResult { State = VerificationState.Available, Registry = Parse(stream), Message = "Verified-mod list fetched from GitHub into memory." };
+                    return new VerificationResult { State = VerificationState.Available, Registry = known ? ParseKnown(stream) : Parse(stream), Message = (known ? "Known-mod" : "Verified-mod") + " list fetched from GitHub into memory." };
             }
             catch (Win32Exception ex)
             {
                 return new VerificationResult { State = VerificationState.Unavailable,
-                    Message = "No connection to GitHub; cannot check verified mods (network/TLS error " + ex.NativeErrorCode + "). Verification is unknown; this session is not eligible for leaderboard submissions." };
+                    Message = "No connection to GitHub; cannot check " + label + " (network/TLS error " + ex.NativeErrorCode + "). Classification is unknown." };
             }
             catch (Exception ex)
             {
                 return new VerificationResult { State = VerificationState.Unavailable,
-                    Message = "Cannot check verified mods: " + ex.Message + " Verification is unknown; this session is not eligible for leaderboard submissions." };
+                    Message = "Cannot check " + label + ": " + ex.Message + " Classification is unknown." };
             }
         }
         public static Uri ValidateUrl(string url)
@@ -49,16 +54,22 @@ namespace SNSRModLoader
             return uri;
         }
         public static XmlDocument Parse(Stream stream)
+        { return ParseRegistry(stream, false); }
+        public static XmlDocument ParseKnown(Stream stream)
+        { return ParseRegistry(stream, true); }
+        private static XmlDocument ParseRegistry(Stream stream, bool known)
         {
             var document = Registry.Read(stream);
             var root = document.DocumentElement;
-            if (root == null || root.Name != "verifiedMods" || root.GetAttribute("schemaVersion") != "1") throw new FormatException("Invalid verified-mod registry schema.");
+            if (root == null || root.Name != (known ? "knownMods" : "verifiedMods") || root.GetAttribute("schemaVersion") != "1") throw new FormatException("Invalid mod registry schema.");
             foreach (XmlNode node in root.ChildNodes)
             {
                 var mod = node as XmlElement;
                 if (mod == null) continue;
                 if (mod.Name != "mod" || !PluginContext.IsValidId(mod.GetAttribute("id")) || !Regex.IsMatch(mod.GetAttribute("sha256"), "^[0-9a-fA-F]{64}$")) throw new FormatException("Invalid verified-mod identity or SHA-256.");
                 new Version(mod.GetAttribute("version"));
+                bool uce;
+                if (known && mod.HasAttribute("UCE") && !bool.TryParse(mod.GetAttribute("UCE"), out uce)) throw new FormatException("Known-mod UCE must be True or False.");
                 if (mod.SelectNodes("target").Count == 0) throw new FormatException("Verified mod has no game targets.");
                 foreach (XmlElement target in mod.SelectNodes("target"))
                 {

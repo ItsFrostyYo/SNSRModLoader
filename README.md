@@ -35,17 +35,29 @@ SNSRModLoader
 Using Save Preload Base
 ```
 
-After the online check succeeds, verified mods appear first, followed by unverified mods. With the current list, Save Preload Base is first after `Using` and white; other mods appear below it in light yellow. While verification is pending or unavailable, names remain light yellow. With multiple mods, commas separate the names; the last name has no comma. All warnings and update prompts are external Windows dialogs.
+After the online check succeeds, loaded mods appear in this order: verified, known, then unknown. With multiple mods, commas separate the names; the last name has no comma. All warnings and update prompts are external Windows dialogs.
+
+| Status | Name color | Leaderboards |
+| --- | --- | --- |
+| Verified | White | Eligible for the main leaderboard, subject to submission rules |
+| Known | Yellow | Not allowed, unless its entry explicitly permits UCE |
+| Known with `UCE=True` | Yellow | Unofficial Category Extensions Leaderboard only |
+| Unknown | Red | Not allowed on any leaderboard |
+| Conflicted | Orange | Blocked from loading; all conflict pairs are reported |
+
+Conflicted plugins appear separately under “Conflicts (not loaded)”. Pending, unavailable or disabled checks do not grant approval; unchecked names remain red.
 
 ## Verified mods
 
 | Verified mod | Version | Supported Versions |
 | --- | --- | --- |
-| Subnautica Optimization Mod | 1.0.0 | September 2018 |
+| Optimizations Mod | 1.0.2 | September 2018 |
 
-The authoritative [verified-mod list](verified-mods.xml) checks the plugin's exact ID, version, DLL SHA-256 and supported game version. Renaming a DLL does not change its verification, but modifying or rebuilding it does.
+The authoritative [verified-mod list](verified-mods.xml) and [known-mod list](known-mods.xml) check the plugin's exact ID, version, DLL SHA-256 and supported game version. Renaming a DLL does not change its classification, but modifying or rebuilding it does. Verified status takes precedence over known status.
 
-The list is fetched into memory at launch and is never saved or cached in the game folder. No internet connection, a failed request or an unpublished list produces a verification warning; the game still runs. Unverified plugins are marked as ineligible for leaderboard submissions. Verification is informational, and leaderboard moderators decide whether a submission is accepted.
+The lists are fetched into memory at launch and never saved or cached in the game folder. If all loaded mods are verified, no classification warning appears and the known list is not requested. A failed connection leaves approval unknown and the game still runs. Verification is informational; leaderboard moderators decide whether a submission is accepted.
+
+Set `checkVerifiedMods=false` in `Mods/Loader/Config/loader.ini` to disable both online classification checks and their popups. Conflict checks still run, names remain unapproved/red, and leaderboard eligibility is not granted while checks are disabled.
 
 ## Updates
 

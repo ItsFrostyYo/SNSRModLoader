@@ -20,6 +20,9 @@ namespace SNSRModLoader
         public string Id, Name, Version, Path, TypeName, Sha256;
         public GameVersion[] Targets;
         public bool Verified;
+        public PluginStatus Status;
+        public bool UCEAllowed, HasAdditionalAssemblies;
+        public readonly List<PluginInfo> InstalledConflicts = new List<PluginInfo>();
         public bool AutomaticUpdate;
         public string UpdateRepository, UpdateManifestUrl;
         public readonly List<Dependency> Dependencies = new List<Dependency>();
@@ -102,6 +105,10 @@ namespace SNSRModLoader
 
         public static List<PluginInfo> Order(List<PluginInfo> candidates, Action<string> warning)
         {
+            foreach (var candidate in candidates) {
+                candidate.InstalledConflicts.Clear();
+                if (candidate.Status == PluginStatus.Conflicted) candidate.Status = PluginStatus.Unknown;
+            }
             var ordered = new List<PluginInfo>();
             var blocked = new HashSet<PluginInfo>();
             var pairs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -110,8 +117,13 @@ namespace SNSRModLoader
                     foreach (var other in candidates.Where(p => string.Equals(p.Id, conflict.Id, StringComparison.OrdinalIgnoreCase)))
                     {
                         blocked.Add(info); blocked.Add(other);
+                        info.Status = other.Status = PluginStatus.Conflicted;
+                        info.Verified = other.Verified = false;
+                        info.UCEAllowed = other.UCEAllowed = false;
+                        if (!info.InstalledConflicts.Contains(other)) info.InstalledConflicts.Add(other);
+                        if (!other.InstalledConflicts.Contains(info)) other.InstalledConflicts.Add(info);
                         var key = string.Compare(info.Id, other.Id, StringComparison.OrdinalIgnoreCase) < 0 ? info.Id + ":" + other.Id : other.Id + ":" + info.Id;
-                        if (pairs.Add(key)) warning("Plugin conflict: " + info.Name + " [" + info.Id + "] (" + Path.GetFileName(info.Path) + ") conflicts with " + other.Name + " [" + other.Id + "] (" + Path.GetFileName(other.Path) + "). Both plugins skipped.");
+                        if (pairs.Add(key)) warning("The plugin " + info.Name + " [" + info.Id + "] (" + Path.GetFileName(info.Path) + ") conflicts with another installed plugin " + other.Name + " [" + other.Id + "] (" + Path.GetFileName(other.Path) + "). Both plugins were skipped.");
                     }
             var remaining = candidates.Where(p => !blocked.Contains(p)).ToList();
             bool progress;

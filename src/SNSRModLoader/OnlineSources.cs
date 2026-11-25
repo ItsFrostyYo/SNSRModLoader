@@ -13,6 +13,7 @@ namespace SNSRModLoader
             if (configured.Length > 0) return configured;
             const string repository = "https://raw.githubusercontent.com/ItsFrostyYo/SNSRModLoader/main/";
             if (name == "verifiedModsUrl") return repository + "verified-mods.xml";
+            if (name == "knownModsUrl") return repository + "known-mods.xml";
             if (name == "updateManifestUrl") return repository + "loader-update.xml";
             return "";
         }

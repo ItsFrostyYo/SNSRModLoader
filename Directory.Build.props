@@ -4,7 +4,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Deterministic>true</Deterministic>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <DefineConstants Condition="'$(Diagnostics)' == 'true'">$(DefineConstants);SNSR_DIAGNOSTICS</DefineConstants>
     <TestFriend Condition="'$(MSBuildProjectName)' == 'SNSRModLoader'">SNSRModLoader.Tests</TestFriend>
     <TestFriend Condition="'$(MSBuildProjectName)' == 'SNSRModLoader.Runtime'">WatermarkLifecycleTests</TestFriend>
