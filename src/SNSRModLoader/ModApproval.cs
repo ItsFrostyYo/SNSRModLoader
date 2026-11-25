@@ -5,6 +5,7 @@ using System.Linq;
 namespace SNSRModLoader
 {
     public enum PluginStatus { Unknown, Verified, Known, Conflicted }
+    public enum PluginColor { White, Yellow, Red, Orange }
 
     public sealed class ModCatalogResult
     {
@@ -13,6 +14,16 @@ namespace SNSRModLoader
 
     public static class ModApproval
     {
+        public static PluginColor GetColor(PluginInfo info, bool checksEnabled)
+        {
+            if (!checksEnabled) return PluginColor.Red;
+            switch (info.Status) {
+                case PluginStatus.Verified: return PluginColor.White;
+                case PluginStatus.Known: return info.UCEAllowed ? PluginColor.Yellow : PluginColor.Red;
+                case PluginStatus.Conflicted: return PluginColor.Orange;
+                default: return PluginColor.Red;
+            }
+        }
         public static ModCatalogResult Fetch(bool enabled, string verifiedUrl, string knownUrl, PluginInfo[] plugins, GameVersion game)
         { return FetchCore(enabled, verifiedUrl, knownUrl, plugins, game, Verification.Fetch, Verification.FetchKnown); }
 

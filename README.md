@@ -63,12 +63,12 @@ Loaded mods appear verified first, then known, then unknown. The final name has 
 | Classification | Color | Submission status |
 | --- | --- | --- |
 | Verified | White | Eligible for the main leaderboard, subject to its rules |
-| Known | Yellow | Not allowed for leaderboard submission |
+| Known with `UCE="False"` or omitted | Red | Not allowed for leaderboard submission |
 | Known with `UCE="True"` | Yellow | Unofficial Category Extensions Leaderboard only |
 | Unknown | Red | Not allowed on any leaderboard |
 | Conflicted | Orange | Blocked from loading; conflicts must be resolved |
 
-Verified and known entries match the exact plugin ID, registration version, DLL SHA-256 and game target. **UCE permission comes only from `known-mods.xml`, never from the mod.** The lists are fetched into memory and never installed or cached in the game folder. Names remain red until an available list recognizes them; disabling checks leaves loaded names red, while conflicts stay orange. All-verified loads produce no classification warning and skip the known-list request. Classification is informational; leaderboard moderators decide whether a submission is accepted.
+Verified and known entries match the exact plugin ID, registration version, DLL SHA-256 and game target. **UCE permission comes only from `known-mods.xml`, never from the mod.** The lists are fetched into memory and never installed or cached in the game folder. Names remain red until verification or UCE approval is confirmed. With `checkVerifiedMods=false`, **every mod name is red, including conflicts**; conflict detection, warnings and blocking still apply. All-verified loads produce no classification warning and skip the known-list request. Classification is informational; leaderboard moderators decide whether a submission is accepted.
 
 After startup, a background update check can offer loader and opted-in mod updates together. Accept the prompt, let downloading finish, close the game normally, and wait for the success message before restarting. Updates preserve settings and existing configuration. Failed writes attempt to roll back the batch. Updating a mod does not automatically verify its new DLL.
 
@@ -122,6 +122,21 @@ Startup and plugin details are in `Mods/Loader/loader.log` and `bootstrap.log`; 
 The plugin SDK is **`SNSRModLoader.dll`**, in namespace **`SNSRModLoader`**. Reference it and `0Harmony.dll` from `Mods/Loader`, with **Copy Local disabled**. Reference the matching game/Unity assemblies only as needed, also with Copy Local disabled.
 
 Target **.NET Framework 3.5** for September 2018 or a DLL shared across all four versions. Compile against the oldest game APIs you intend to support. A plugin referencing a newer loader API than the installed loader is skipped with an update warning. The Bootstrap and Runtime assemblies implement loader internals; normal plugins use the SDK and `PluginContext`.
+
+### What mods can do
+
+Harmony patches are optional. A plugin's `Load` method runs managed code on Unity's main thread, with access to compatible game and Unity APIs.
+
+| Capability | Approach |
+| --- | --- |
+| Change existing game behavior | Harmony patches or game-provided events and APIs |
+| Run ongoing behavior | Create Unity `MonoBehaviour` components with `Start`, `Update` or coroutines |
+| Add settings and UI | Use native game options/UI APIs and `context.Settings` |
+| Change game state or add content | Use the target version's game APIs; content registration must be implemented by the mod |
+| Load assets and extra files | Unity asset APIs and ordinary file access; keep mod files under `context.SettingsDirectory` |
+| Use additional managed libraries | Install compatible libraries in the plugin's settings directory |
+
+The loader provides startup, metadata, settings, logging, dependency/conflict checks and optional updates. It does not provide a universal content-registration API or adapt game APIs across versions. Unity objects must be accessed on the main thread. Plugins should clean up their components, events and resources in `Unload`; plugins execute with the game's permissions and are not sandboxed.
 
 ### Minimal plugin
 
@@ -385,6 +400,7 @@ These utilities are public for inspection and tooling. Fetch methods are synchro
 | `Dependency` | `Id`, `MinimumVersion` |
 | `PluginConflict` | `Id`, optional friendly `Name` |
 | `PluginStatus` | `Unknown`, `Verified`, `Known`, `Conflicted` |
+| `PluginColor` | `White`, `Yellow`, `Red`, `Orange` |
 | `VerificationResult` | `State`, `Message`, parsed XML `Registry` |
 | `VerificationState` | `Pending`, `Available`, `Unavailable`, `Disabled`, `NotRequired` |
 | `ModCatalogResult` | `Verified` and `Known` verification results |
@@ -414,6 +430,7 @@ Identity and update-source fields in `PluginInfo` are strings, including `Versio
 | `ModApproval.Fetch(bool enabled, string verifiedUrl, string knownUrl, PluginInfo[] plugins, GameVersion game)` | Fetch needed catalogs; disabled mode makes no requests, and all-verified sets skip the known fetch |
 | `ModApproval.Classify(PluginInfo info, ModCatalogResult catalogs, GameVersion game)` | Update the info's classification fields; conflicts take precedence, then verified, known and unknown |
 | `ModApproval.Warning(PluginInfo info)` | Return the known/unknown submission message; verified/conflicted statuses return null, with conflicts reported by discovery |
+| `ModApproval.GetColor(PluginInfo info, bool checksEnabled)` | Return the watermark color; disabled checks force red, and only known mods with UCE permission are yellow |
 | `OnlineSources.Get(string name)` | Resolve `verifiedModsUrl`, `knownModsUrl` or `updateManifestUrl` from embedded defaults; unknown names return an empty string |
 | `UpdateSource.Validate(string repository, string manifestUrl)` | Validate that a mod's raw HTTPS manifest belongs to its declared GitHub repository |
 
@@ -421,4 +438,4 @@ Registry fetches have timeouts and a 1 MiB response limit. Failed/offline fetche
 
 Source reference: [registration and context](src/SNSRModLoader/Api.cs) · [settings and logging](src/SNSRModLoader/Storage.cs) · [discovery](src/SNSRModLoader/Discovery.cs) · [classification](src/SNSRModLoader/ModApproval.cs)
 
-Bundled dependency notices are in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+Copyright 2026 SNSRModLoader github contributors. Project code is licensed under [Apache-2.0](LICENSE). Third-party components retain their own licenses; see [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).

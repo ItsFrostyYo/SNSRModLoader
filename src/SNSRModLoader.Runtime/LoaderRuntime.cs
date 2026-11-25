@@ -265,7 +265,8 @@ namespace SNSRModLoader.Runtime
             // Stable partition for display only; dependency/load/unload order stays intact.
             displayPlugins.Clear();
             foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Verified) displayPlugins.Add(plugin.Info);
-            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Known) displayPlugins.Add(plugin.Info);
+            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Known && plugin.Info.UCEAllowed) displayPlugins.Add(plugin.Info);
+            foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Known && !plugin.Info.UCEAllowed) displayPlugins.Add(plugin.Info);
             foreach (var plugin in LoaderRuntime.Loaded) if (plugin.Info.Status == PluginStatus.Unknown) displayPlugins.Add(plugin.Info);
             displayPlugins.AddRange(LoaderRuntime.Conflicted);
         }
@@ -279,10 +280,10 @@ namespace SNSRModLoader.Runtime
         }
         private static Color ModColor(PluginInfo info)
         {
-            switch (info.Status) {
-                case PluginStatus.Verified: return Color.white;
-                case PluginStatus.Known: return Color.yellow;
-                case PluginStatus.Conflicted: return new Color(1f, 0.5f, 0f, 1f);
+            switch (ModApproval.GetColor(info, LoaderRuntime.VerificationChecksEnabled)) {
+                case PluginColor.White: return Color.white;
+                case PluginColor.Yellow: return Color.yellow;
+                case PluginColor.Orange: return new Color(1f, 0.5f, 0f, 1f);
                 default: return Color.red;
             }
         }
