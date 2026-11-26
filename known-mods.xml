@@ -1,5 +1,5 @@
 <knownMods schemaVersion="1">
-    <mod id="ItsFrosti.SpeedrunningMod" version="1.0.0" sha256="e9e6dc8201af38c2b278262b070d5798d0c725f8ae6169cd2176a8eb66c9feea" UCE="true">
+    <mod id="ItsFrosti.SpeedrunningMod" version="1.0.0" sha256="60a1e6e91da05fca64c4386a6e1bf146ed1a96a5b60efa70723c2daf6ce55bec" UCE="true">
     <target version="September2018" /> </mod>
     <mod id="ItsFrosti.OptimizationsMod" version="1.0.2" sha256="a8e1152a0bc11d467f59f9580b08507a18397586643a22e6fa23a0aa3e9ede12" UCE="true">
     <target version="September2018" /> </mod>
