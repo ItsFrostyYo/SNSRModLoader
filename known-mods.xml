@@ -1,2 +1,6 @@
 <knownMods schemaVersion="1">
+    <mod id="ItsFrosti.SpeedrunningMod" version="1.0.0" sha256="e9e6dc8201af38c2b278262b070d5798d0c725f8ae6169cd2176a8eb66c9feea">
+    <target version="September2018" />
+    <UCE="true"/>
+    </mod>
 </knownMods>
