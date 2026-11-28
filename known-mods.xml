@@ -1,10 +1,12 @@
 <knownMods schemaVersion="1">
     <mod id="ItsFrosti.SpeedrunningMod" version="1.1.0" sha256="8306100f1e1dd0e780ba1624bf0f6d815b321471a85bd50c73ab3706a29c6dbf" UCE="true">
     <target version="September2018" /> </mod>
-    <mod id="ItsFrosti.OptimizationsMod" version="1.0.3" sha256="5575d019876729784341e738f1b3efe47f694f5c51c54394f4b8d5cbc4ef729a" UCE="true">
+    <mod id="ItsFrosti.OptimizationsMod" version="1.0.4" sha256="87ccb6621b8e5f8b8b2719fa2078a49ff4b8144c1b787b32f69f262ced15f239" UCE="true">
     <target version="September2018" /> </mod>
 
     <!-- Past Mods that are still Verified -->
+    <mod id="ItsFrosti.OptimizationsMod" version="1.0.3" sha256="5575d019876729784341e738f1b3efe47f694f5c51c54394f4b8d5cbc4ef729a" UCE="true">
+    <target version="September2018" /> </mod>
     <mod id="ItsFrosti.OptimizationsMod" version="1.0.2" sha256="a8e1152a0bc11d467f59f9580b08507a18397586643a22e6fa23a0aa3e9ede12" UCE="true">
     <target version="September2018" /> </mod>
 </knownMods>
